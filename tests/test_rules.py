@@ -26,9 +26,18 @@ def test_price_in_summary_is_rejected(summary):
     assert any("price" in v for v in violations(card(summary=summary)))
 
 
-def test_price_in_cta_text_is_rejected():
-    # Issue #1: a price on the button reached the website.
-    assert any("price" in v for v in violations(card(cta_text="Only $19 a day!")))
+@pytest.mark.parametrize(
+    ("field", "text"),
+    [
+        ("title", "Only $19 today"),
+        ("summary", "Enjoy a friendly visit for only $19 today."),
+        ("cta_text", "Only $19 today"),
+    ],
+)
+def test_price_in_each_text_field_is_rejected_and_identifies_the_field(field, text):
+    # Issue #1: prices in a heading or button reached the website.
+    found = violations(card(**{field: text}))
+    assert any("price" in violation and field in violation for violation in found)
 
 
 @pytest.mark.parametrize("field", ["title", "summary", "cta_text"])
